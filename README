@@ -6,4 +6,3 @@ For customers of Linode that use the Linode DNS manager.  Released into the publ
 
 Requires Python 3.0 or above.  Python 2.6 may work.
 Contains directions in the script (which you'll have to edit anyway).
-
