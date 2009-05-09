@@ -82,7 +82,6 @@ DEBUG = False
 #####################
 # STOP EDITING HERE #
 
-from sys import exit
 try:
 	from json import load
 	from urllib.parse import urlencode
