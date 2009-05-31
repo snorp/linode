@@ -1,4 +1,4 @@
-#!/usr/bin/python3.1
+#!/usr/bin/python
 #
 # Easy Python3 Dynamic DNS
 # By Jed Smith <jed@jedsmith.org> 4/29/2009
@@ -47,13 +47,13 @@ KEY = "abcdefghijklmnopqrstuvwxyz"
 #     header("Content-type: text/plain");
 #     printf("%s", $_SERVER["REMOTE_ADDR"]);
 #
-GETIP = "http://hosted.jedsmith.org/ip.php"
+GETIP = "http://ip.thegrebs.com/"
 #
 # If for some reason the API URI changes, or you wish to send requests to a
 # different URI for debugging reasons, edit this.  {0} will be replaced with the
 # API key set above, and & will be added automatically for parameters.
 #
-API = "https://api.linode.com/api/?api_key={0}&resultFormat=JSON"
+API = "https://api.linode.com/api/?api_key=%s&resultFormat=JSON"
 #
 # Comment or remove this line to indicate that you edited the options above.
 #
@@ -82,32 +82,34 @@ DEBUG = False
 #####################
 # STOP EDITING HERE #
 
+import sys
+
 try:
-	from json import load
-	from urllib.parse import urlencode
-	from urllib.request import urlretrieve
-except Exception as excp:
+	from simplejson import loads
+	from urllib import urlencode
+	from urllib import urlretrieve
+except Exception, excp:
 	exit("Couldn't import the standard library. Are you running Python 3?")
 
 def execute(action, parameters):
 	# Execute a query and return a Python dictionary.
-	uri = "{0}&action={1}".format(API.format(KEY), action)
+	uri = "%s&action=%s" % (API % KEY, action)
 	if parameters and len(parameters) > 0:
-		uri = "{0}&{1}".format(uri, urlencode(parameters))
+		uri = "%s&%s" % (uri, urlencode(parameters))
 	if DEBUG:
 		print("-->", uri)
 	file, headers = urlretrieve(uri)
 	if DEBUG:
 		print("<--", file)
-		print(headers, end="")
+		print(headers)
 		print(open(file).read())
 		print()
-	json = load(open(file), encoding="utf-8")
+	json = loads(open(file).read(), encoding="utf-8")
 	if len(json["ERRORARRAY"]) > 0:
 		err = json["ERRORARRAY"][0]
-		raise Exception("Error {0}: {1}".format(int(err["ERRORCODE"]),
-			err["ERRORMESSAGE"]))
-	return load(open(file), encoding="utf-8")
+		raise Exception("Error %s: %s" % (int(err["ERRORCODE"]),
+						  err["ERRORMESSAGE"]))
+	return json
 
 def ip():
 	if DEBUG:
@@ -115,7 +117,7 @@ def ip():
 	file, headers = urlretrieve(GETIP)
 	if DEBUG:
 		print("<--", file)
-		print(headers, end="")
+		print(headers)
 		print(open(file).read())
 		print()
 	return open(file).read().strip()
@@ -137,13 +139,13 @@ def main():
 				"TTL_Sec": res["TTL_SEC"]
 			}
 			execute("domainResourceSave", request)
-			print("OK {0} -> {1}".format(old, public))
+			print("OK %s -> %s" % (old, public))
 			return 1
 		else:
 			print("OK")
 			return 0
-	except Exception as excp:
-		print("FAIL {0}: {1}".format(type(excp).__name__, excp))
+	except Exception, excp:
+		print("FAIL %s: %s" % (type(excp).__name__, excp))
 		return 2
 
 if __name__ == "__main__":
