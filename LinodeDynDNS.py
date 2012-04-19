@@ -47,13 +47,13 @@ KEY = "abcdefghijklmnopqrstuvwxyz"
 #     header("Content-type: text/plain");
 #     printf("%s", $_SERVER["REMOTE_ADDR"]);
 #
-GETIP = "http://hosted.jedsmith.org/ip.php"
+GETIP = "http://corz.org/ip"
 #
 # If for some reason the API URI changes, or you wish to send requests to a
 # different URI for debugging reasons, edit this.  {0} will be replaced with the
 # API key set above, and & will be added automatically for parameters.
 #
-API = "https://api.linode.com/api/?api_key={0}&resultFormat=JSON"
+API = "https://api.linode.com/?api_key={0}&resultFormat=JSON"
 #
 # Comment or remove this line to indicate that you edited the options above.
 #
@@ -122,7 +122,7 @@ def ip():
 
 def main():
 	try:
-		res = execute("domainResourceGet", {"ResourceID": RESOURCE})["DATA"]
+		res = execute("domain.resource.list", {"ResourceID": RESOURCE,"DomainID":304090})["DATA"][0]
 		if(len(res)) == 0:
 			raise Exception("No such resource?".format(RESOURCE))
 		public = ip()
@@ -136,7 +136,7 @@ def main():
 				"Target": public,
 				"TTL_Sec": res["TTL_SEC"]
 			}
-			execute("domainResourceSave", request)
+			execute("domain.resource.update", request)
 			print("OK {0} -> {1}".format(old, public))
 			return 1
 		else:
