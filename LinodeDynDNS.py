@@ -19,25 +19,18 @@
 #
 #   2. Save it.
 #
-#   3. Go back and edit the A record you just created. Make a note of the
-#      ResourceID in the URI of the page while editing the record.
-#
-#   4. Edit the four configuration options below, following the directions for
+#   3. Edit the three configuration options below, following the directions for
 #      each.  As this is a quick hack, it assumes everything goes right.
 #
-# First, the resource ID that contains the 'home' record you created above. If
-# the URI while editing that A record looks like this:
+# Set the domain name below.  The API key MUST have write access to this 
+# resource ID.
 #
-#  linode.com/members/dns/resource_aud.cfm?DomainID=98765&ResourceID=123456
-#                                                                    ^
-# You want 123456. The API key MUST have write access to this resource ID.
-#
-RESOURCE = "000000"
+DOMAIN = "home.yourdomain.com"
 #
 # Your Linode API key.  You can generate this by going to your profile in the
 # Linode manager.  It should be fairly long.
 #
-KEY = "abcdefghijklmnopqrstuvwxyz"
+KEY = "yourapikey"
 #
 # The URI of a Web service that returns your IP address as plaintext.  You are
 # welcome to leave this at the default value and use mine.  If you want to run
@@ -107,41 +100,66 @@ def execute(action, parameters):
 		err = json["ERRORARRAY"][0]
 		raise Exception("Error {0}: {1}".format(int(err["ERRORCODE"]),
 			err["ERRORMESSAGE"]))
-	return load(open(file), encoding="utf-8")
+	return json["DATA"]
 
 def ip():
 	if DEBUG:
 		print("-->", GETIP)
 	file, headers = urlretrieve(GETIP)
+	result = open(file).read().strip()
 	if DEBUG:
 		print("<--", file)
 		print(headers, end="")
-		print(open(file).read())
+		print(result)
 		print()
-	return open(file).read().strip()
+	return result
 
 def main():
 	try:
-		res = execute("domainResourceGet", {"ResourceID": RESOURCE})["DATA"]
-		if(len(res)) == 0:
-			raise Exception("No such resource?".format(RESOURCE))
-		public = ip()
-		if res["TARGET"] != public:
-			old = res["TARGET"]
-			request = {
-				"ResourceID": res["RESOURCEID"],
-				"DomainID": res["DOMAINID"],
-				"Name": res["NAME"],
-				"Type": res["TYPE"],
-				"Target": public,
-				"TTL_Sec": res["TTL_SEC"]
-			}
-			execute("domainResourceSave", request)
-			print("OK {0} -> {1}".format(old, public))
-			return 1
-		else:
+		# Determine DomainId
+		domains = execute("domain.list", {})
+		for domain in domains:
+			if DOMAIN.endswith(domain["DOMAIN"]):
+				matchedDomain = domain
+				break
+		if matchedDomain is None:
+			raise Exception("Domain not found")
+		domainId = matchedDomain["DOMAINID"]
+		domainName = matchedDomain["DOMAIN"]
+		if DEBUG:
+			print("Found matching domain:")
+			print("  DomainId = {0}".format(domainId))
+			print("  Name = {0}".format(domainName))
+		
+		# Determine resource id (subdomain)
+		resources = execute("domain.resource.list",
+			{"DomainId": domainId})
+		for resource in resources:
+			if resource["NAME"] + "." + domainName == DOMAIN:
+				matchedResource = resource
+				break
+		if resource is None:
+			raise Exception("Resource not found")
+		resourceId = matchedResource["RESOURCEID"]
+		oldIp = matchedResource["TARGET"]
+		if DEBUG:
+			print("Found matching resource:")
+			print("  ResourceId = {0}".format(resourceId))
+			print("  Target = {0}".format(oldIp))
+
+		# Determine public ip
+		newIp = ip()
+		if oldIp == newIp:
 			print("OK")
 			return 0
+		
+		# Update public ip
+		execute("domain.resource.update", {
+			"ResourceID": resourceId,
+			"DomainID": domainId,
+			"Target": newIp})
+		print("OK {0} -> {1}".format(oldIp, newIp))
+		return 1
 	except Exception as excp:
 		print("FAIL {0}: {1}".format(type(excp).__name__, excp))
 		return 2
