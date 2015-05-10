@@ -129,6 +129,8 @@ def main():
 		res = execute("domainResourceGet", {"DomainID": DOMAIN, "ResourceID": RESOURCE})["DATA"]
 		if(len(res)) == 0:
 			raise Exception("No such resource?".format(RESOURCE))
+		else:
+			res = res[0]
 		public = ip()
 		if res["TARGET"] != public:
 			old = res["TARGET"]
