@@ -32,7 +32,11 @@
 #                                                                    ^
 # You want 123456. The API key MUST have write access to this resource ID.
 #
+# You must also specify the resource ID for the domain that contains the
+# 'home' record.
+#
 RESOURCE = "000000"
+DOMAIN = "000000"
 #
 # Your Linode API key.  You can generate this by going to your profile in the
 # Linode manager.  It should be fairly long.
@@ -122,7 +126,7 @@ def ip():
 
 def main():
 	try:
-		res = execute("domainResourceGet", {"ResourceID": RESOURCE})["DATA"]
+		res = execute("domainResourceGet", {"DomainID": DOMAIN, "ResourceID": RESOURCE})["DATA"]
 		if(len(res)) == 0:
 			raise Exception("No such resource?".format(RESOURCE))
 		public = ip()
