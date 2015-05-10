@@ -143,6 +143,8 @@ def main():
 			print("OK")
 			return 0
 	except Exception as excp:
+		if DEBUG:
+			import traceback; traceback.print_exc()
 		print("FAIL {0}: {1}".format(type(excp).__name__, excp))
 		return 2
 
