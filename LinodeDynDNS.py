@@ -43,15 +43,14 @@ DOMAIN = "000000"
 #
 KEY = "abcdefghijklmnopqrstuvwxyz"
 #
-# The URI of a Web service that returns your IP address as plaintext.  You are
-# welcome to leave this at the default value and use mine.  If you want to run
-# your own, the source code of that script is:
+# The URI of a Web service that returns your IP address as plaintext. You
+# can run your own, if you want, using this php code:
 #
 #     <?php
 #     header("Content-type: text/plain");
 #     printf("%s", $_SERVER["REMOTE_ADDR"]);
 #
-GETIP = "http://hosted.jedsmith.org/ip.php"
+GETIP = "http://icanhazip.com"
 #
 # If for some reason the API URI changes, or you wish to send requests to a
 # different URI for debugging reasons, edit this.  {0} will be replaced with the
