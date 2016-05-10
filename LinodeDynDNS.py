@@ -29,10 +29,21 @@
 # the URI while editing that A record looks like this:
 #
 #  linode.com/members/dns/resource_aud.cfm?DomainID=98765&ResourceID=123456
-#                                                                    ^
-# You want 123456. The API key MUST have write access to this resource ID.
+#  You want 123456. The API key MUST have write access to this resource ID.
+#
+# As of lately ( 5/2016 ) the DOMAINID is not in the URI
+# https://manager.linode.com/dns/resource/domain.com?id=000000
+#                                          Resource ID  ^   
 #
 RESOURCE = "000000"
+#
+#
+# Find this domain by going to the DNS Manager in Linode and then clicking
+# check next to the domain associates with the above resource ID. 
+# Number should be sitting in parentheses next to domain name.
+#
+#
+DOMAIN = "000000"
 #
 # Your Linode API key.  You can generate this by going to your profile in the
 # Linode manager.  It should be fairly long.
@@ -47,7 +58,7 @@ KEY = "abcdefghijklmnopqrstuvwxyz"
 #     header("Content-type: text/plain");
 #     printf("%s", $_SERVER["REMOTE_ADDR"]);
 #
-GETIP = "http://hosted.jedsmith.org/ip.php"
+GETIP = "http://icanhazip.com/"
 #
 # If for some reason the API URI changes, or you wish to send requests to a
 # different URI for debugging reasons, edit this.  {0} will be replaced with the
@@ -122,7 +133,8 @@ def ip():
 
 def main():
 	try:
-		res = execute("domainResourceGet", {"ResourceID": RESOURCE})["DATA"]
+		res = execute("domainResourceGet", {"DomainID": DOMAIN, "ResourceID": RESOURCE})["DATA"]
+		res = res[0] # Turn res from a list to a dict
 		if(len(res)) == 0:
 			raise Exception("No such resource?".format(RESOURCE))
 		public = ip()
@@ -143,6 +155,7 @@ def main():
 			print("OK")
 			return 0
 	except Exception as excp:
+		import traceback; traceback.print_exc()
 		print("FAIL {0}: {1}".format(type(excp).__name__, excp))
 		return 2
 
