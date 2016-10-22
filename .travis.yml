@@ -1,5 +1,5 @@
 language: python
 python:
   - "3.5"
-sctip: 
+script: 
   - python -m unittest discover;
