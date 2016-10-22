@@ -3,3 +3,4 @@ python:
   - "3.5"
 script: 
   - python -m unittest discover;
+  - python LinodeDynDNS.py
