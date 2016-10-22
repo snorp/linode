@@ -19,39 +19,19 @@
 #
 #   2. Save it.
 #
-#   3. Go back and edit the A record you just created. Make a note of the
-#      ResourceID in the URI of the page while editing the record.
+#   3. If you did not already create an API key, please generate it
+# 
+#	4. Copy LinodeDynDNS.conf.template into LinodeDynDNS.conf
 #
-#   4. Edit the four configuration options below, following the directions for
-#      each.  As this is a quick hack, it assumes everything goes right.
+#	5. Edit LinodeDynDNS.conf
 #
-# First, the resource ID that contains the 'home' record you created above. If
-# the URI while editing that A record looks like this:
+#	6. Configure your Linode API key
 #
-#  linode.com/members/dns/resource_aud.cfm?DomainID=98765&ResourceID=123456
-#  You want 123456. The API key MUST have write access to this resource ID.
+#	7. Configure your domain
 #
-# As of lately ( 5/2016 ) the DOMAINID is not in the URI
-# https://manager.linode.com/dns/resource/domain.com?id=000000
-#                                          Resource ID  ^   
+# 	8. Configure your resource (server)
 #
-RESOURCE = "nuc"
-RESOURCEID = "000000"
-#
-#
-# Find this domain by going to the DNS Manager in Linode and then clicking
-# check next to the domain associates with the above resource ID. 
-# Number should be sitting in parentheses next to domain name.
-#
-#
-DOMAIN = "de.majic.rs"
-#DOMAINID = "000000"
-#
-# Your Linode API key.  You can generate this by going to your profile in the
-# Linode manager.  It should be fairly long.
-#
-KEY = "abcdefghijklmnopqrstuvwxyz"
-KEY = "982aRGCfRtDxMWHWRF2v6HVnudEdDWyEb1lU1bZlSF4GQP1QM39ec2l5sT0RukOf"
+#	9. Configure the GETIP
 #
 # The URI of a Web service that returns your IP address as plaintext.  You are
 # welcome to leave this at the default value and use mine.  If you want to run
@@ -67,10 +47,6 @@ KEY = "982aRGCfRtDxMWHWRF2v6HVnudEdDWyEb1lU1bZlSF4GQP1QM39ec2l5sT0RukOf"
 # API key set above, and & will be added automatically for parameters.
 #
 API = "https://api.linode.com/api/?api_key={0}&resultFormat=JSON"
-#
-# Comment or remove this line to indicate that you edited the options above.
-#
-#exit("Did you edit the options?  vi this file open.")
 #
 # That's it!
 #
