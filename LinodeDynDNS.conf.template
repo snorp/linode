@@ -1,0 +1,10 @@
+[LINODE]
+# configure URL that returns your external IP. Use of https is preferred
+GETIP = https://icanhazip.com/
+# configure resource name
+RESOURCE = server
+# configure domain
+DOMAIN = some.domain.com
+# copy/past the API key you obtained from linode.
+KEY = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
