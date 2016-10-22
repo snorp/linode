@@ -21,17 +21,17 @@
 #
 #   3. If you did not already create an API key, please generate it
 # 
-#	4. Copy LinodeDynDNS.conf.template into LinodeDynDNS.conf
+#   4. Copy LinodeDynDNS.conf.template into LinodeDynDNS.conf
 #
-#	5. Edit LinodeDynDNS.conf
+#   5. Edit LinodeDynDNS.conf
 #
-#	6. Configure your Linode API key
+#   6. Configure your Linode API key
 #
-#	7. Configure your domain
+#   7. Configure your domain
 #
-# 	8. Configure your resource (server)
+#   8. Configure your resource (server)
 #
-#	9. Configure the GETIP
+#   9. Configure the GETIP
 #
 # The URI of a Web service that returns your IP address as plaintext.  You are
 # welcome to leave this at the default value and use mine.  If you want to run
