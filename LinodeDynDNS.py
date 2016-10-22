@@ -19,36 +19,19 @@
 #
 #   2. Save it.
 #
-#   3. Go back and edit the A record you just created. Make a note of the
-#      ResourceID in the URI of the page while editing the record.
+#   3. If you did not already create an API key, please generate it
+# 
+#   4. Copy LinodeDynDNS.conf.template into LinodeDynDNS.conf
 #
-#   4. Edit the four configuration options below, following the directions for
-#      each.  As this is a quick hack, it assumes everything goes right.
+#   5. Edit LinodeDynDNS.conf
 #
-# First, the resource ID that contains the 'home' record you created above. If
-# the URI while editing that A record looks like this:
+#   6. Configure your Linode API key
 #
-#  linode.com/members/dns/resource_aud.cfm?DomainID=98765&ResourceID=123456
-#  You want 123456. The API key MUST have write access to this resource ID.
+#   7. Configure your domain
 #
-# As of lately ( 5/2016 ) the DOMAINID is not in the URI
-# https://manager.linode.com/dns/resource/domain.com?id=000000
-#                                          Resource ID  ^   
+#   8. Configure your resource (server)
 #
-RESOURCE = "000000"
-#
-#
-# Find this domain by going to the DNS Manager in Linode and then clicking
-# check next to the domain associates with the above resource ID. 
-# Number should be sitting in parentheses next to domain name.
-#
-#
-DOMAIN = "000000"
-#
-# Your Linode API key.  You can generate this by going to your profile in the
-# Linode manager.  It should be fairly long.
-#
-KEY = "abcdefghijklmnopqrstuvwxyz"
+#   9. Configure the GETIP
 #
 # The URI of a Web service that returns your IP address as plaintext.  You are
 # welcome to leave this at the default value and use mine.  If you want to run
@@ -58,17 +41,12 @@ KEY = "abcdefghijklmnopqrstuvwxyz"
 #     header("Content-type: text/plain");
 #     printf("%s", $_SERVER["REMOTE_ADDR"]);
 #
-GETIP = "http://icanhazip.com/"
 #
 # If for some reason the API URI changes, or you wish to send requests to a
 # different URI for debugging reasons, edit this.  {0} will be replaced with the
 # API key set above, and & will be added automatically for parameters.
 #
 API = "https://api.linode.com/api/?api_key={0}&resultFormat=JSON"
-#
-# Comment or remove this line to indicate that you edited the options above.
-#
-exit("Did you edit the options?  vi this file open.")
 #
 # That's it!
 #
@@ -88,21 +66,24 @@ exit("Did you edit the options?  vi this file open.")
 # If you want to see responses for troubleshooting, set this:
 #
 DEBUG = False
-
+CONFIG_SECTION = 'LINODE'
+CONFIG_OPTIONS = ['KEY', 'GETIP', 'RESOURCE', 'DOMAIN']
 
 #####################
 # STOP EDITING HERE #
 
 try:
+	import os
 	from json import load
 	from urllib.parse import urlencode
 	from urllib.request import urlretrieve
+	from configparser import SafeConfigParser
 except Exception as excp:
 	exit("Couldn't import the standard library. Are you running Python 3?")
 
-def execute(action, parameters):
+def execute(action, key, parameters):
 	# Execute a query and return a Python dictionary.
-	uri = "{0}&action={1}".format(API.format(KEY), action)
+	uri = "{0}&api_action={1}".format(API.format(key), action)
 	if parameters and len(parameters) > 0:
 		uri = "{0}&{1}".format(uri, urlencode(parameters))
 	if DEBUG:
@@ -120,7 +101,7 @@ def execute(action, parameters):
 			err["ERRORMESSAGE"]))
 	return load(open(file), encoding="utf-8")
 
-def ip():
+def ip(GETIP):
 	if DEBUG:
 		print("-->", GETIP)
 	file, headers = urlretrieve(GETIP)
@@ -131,13 +112,72 @@ def ip():
 		print()
 	return open(file).read().strip()
 
+def load_config():
+	# determine the conf file based on path and filename
+	filename = os.path.join(os.path.dirname(__file__), os.path.basename(__file__)[0:-3] + '.conf' )
+	config = SafeConfigParser()
+	
+	# exit of config file is not created
+	if not os.path.exists(filename):
+		print('Config file {0} was not found.\nExiting...\n'.format(filename))
+
+		exit(-1)
+
+	config.read(filename)
+	
+	# validate the file
+	if not(CONFIG_SECTION == config.default_section or CONFIG_SECTION in config.sections()):
+		print('[{0}] section is not defined'.format(CONFIG_SECTION))
+		exit(-1)
+	
+	# validate config options
+	for option in CONFIG_OPTIONS:
+		if not config.has_option(CONFIG_SECTION, option):
+			print("Option '{0}' is not defined in section [{1}]".format(option, CONFIG_SECTION))
+			exit(-1)
+	
+	if DEBUG:
+		print("Configuration is loaded")
+	return config 
+
 def main():
 	try:
-		res = execute("domainResourceGet", {"DomainID": DOMAIN, "ResourceID": RESOURCE})["DATA"]
+		# load configuration file
+		config = load_config()
+		key = config.get(CONFIG_SECTION, 'KEY')
+		# obtain list of all domains
+		res = execute("domain.list", key, None)
+
+		# determine the DOMAINID of our domain
+		DOMAINID = None
+		cfg_domain = config.get(CONFIG_SECTION, 'DOMAIN')
+		for domain in res['DATA']:
+			if domain['DOMAIN'] == cfg_domain:
+				DOMAINID = domain['DOMAINID']
+				break
+		
+		if not DOMAINID:
+			raise Exception(("Could not determine the DOMAINID for domain '{0}'".format(cfg_domain)))
+		
+		# determine the RESOURCEID of configured RESOURCE
+		cfg_resource = config.get(CONFIG_SECTION, 'RESOURCE')
+		RESOURCEID = None
+		# obtain list of resources within domain
+		res = execute("domain.resource.list", key, {'DOMAINID': DOMAINID})
+		# determine the RESOUCEID of resource
+		for resource in res['DATA']:
+			if resource['NAME'] == cfg_resource:
+				RESOURCEID=resource['RESOURCEID']
+				break
+
+		if not RESOURCEID:
+			raise Exception("Could not determine the RESOURCEID for resource '{0}'".format(cfg_resource))		
+
+		res = execute("domain.resource.list", key, {"DomainID": DOMAINID, "ResourceID": RESOURCEID})["DATA"]
 		res = res[0] # Turn res from a list to a dict
 		if(len(res)) == 0:
-			raise Exception("No such resource?".format(RESOURCE))
-		public = ip()
+			raise Exception("No such resource?".format(RESOURCEID))
+		public = ip(config.get(CONFIG_SECTION, 'GETIP'))
 		if res["TARGET"] != public:
 			old = res["TARGET"]
 			request = {
@@ -148,7 +188,7 @@ def main():
 				"Target": public,
 				"TTL_Sec": res["TTL_SEC"]
 			}
-			execute("domainResourceSave", request)
+			execute("domain.resource.update", key, request)
 			print("OK {0} -> {1}".format(old, public))
 			return 1
 		else:
