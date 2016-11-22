@@ -102,7 +102,7 @@ except Exception as excp:
 
 def execute(action, parameters):
 	# Execute a query and return a Python dictionary.
-	uri = "{0}&action={1}".format(API.format(KEY), action)
+	uri = "{0}&api_action={1}".format(API.format(KEY), action)
 	if parameters and len(parameters) > 0:
 		uri = "{0}&{1}".format(uri, urlencode(parameters))
 	if DEBUG:
