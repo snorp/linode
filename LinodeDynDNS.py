@@ -113,7 +113,7 @@ def execute(action, parameters):
 		print(headers, end="")
 		print(open(file).read())
 		print()
-	json = load(open(file), encoding="utf-8")
+	json = load(open(file))
 	if len(json["ERRORARRAY"]) > 0:
 		err = json["ERRORARRAY"][0]
 		raise Exception("Error {0}: {1}".format(int(err["ERRORCODE"]),
