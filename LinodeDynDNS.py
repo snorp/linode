@@ -1,4 +1,4 @@
-#!/usr/bin/python3.1
+#!/usr/bin/python3.2
 #
 # Easy Python3 Dynamic DNS
 # By Jed Smith <jed@jedsmith.org> 4/29/2009
@@ -38,9 +38,8 @@
 RESOURCE = "000000"
 #
 #
-# Find this domain by going to the DNS Manager in Linode and then clicking
-# check next to the domain associates with the above resource ID. 
-# Number should be sitting in parentheses next to domain name.
+# Use $curl "https://api.linode.com/?api_key={INSERT_YOUR_API_KEY}&api_action=
+# domain.list" to find out the domain id in a shell command environment.
 #
 #
 DOMAIN = "000000"
@@ -133,7 +132,7 @@ def ip():
 
 def main():
 	try:
-		res = execute("domainResourceGet", {"DomainID": DOMAIN, "ResourceID": RESOURCE})["DATA"]
+		res = execute("domain.resource.list", {"DomainID": DOMAIN, "ResourceID": RESOURCE})["DATA"]
 		res = res[0] # Turn res from a list to a dict
 		if(len(res)) == 0:
 			raise Exception("No such resource?".format(RESOURCE))
@@ -148,7 +147,7 @@ def main():
 				"Target": public,
 				"TTL_Sec": res["TTL_SEC"]
 			}
-			execute("domainResourceSave", request)
+			execute("domain.resource.update", request)
 			print("OK {0} -> {1}".format(old, public))
 			return 1
 		else:
